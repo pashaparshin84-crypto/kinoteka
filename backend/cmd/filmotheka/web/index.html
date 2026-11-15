@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Кинотека — API панель</title>
+  <style>
+    :root{
+      --bg:#0d0f14; --bg2:#14171f; --panel:#1a1e29; --panel2:#202634;
+      --line:#2a3140; --text:#eef1f6; --muted:#9aa4b5;
+      --accent:#ef4455; --accent2:#ff6b3d; --ok:#34c98f;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family:"Segoe UI",system-ui,Arial,sans-serif;color:var(--text);line-height:1.5;
+      background:radial-gradient(1000px 500px at 80% -10%,#1d2333 0%,var(--bg) 55%);min-height:100vh;
+    }
+    header{
+      background:rgba(13,15,20,.85);border-bottom:1px solid var(--line);padding:14px 5%;
+      display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:sticky;top:0;
+    }
+    header h1{font-size:1.2em;margin-right:auto}
+    .badge{color:var(--ok);font-weight:600;font-size:.85em}
+    main{padding:24px 5%;max-width:1000px;margin:0 auto}
+    .toolbar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+    input,select,button{
+      padding:10px 12px;border-radius:9px;border:1px solid var(--line);
+      background:var(--panel);color:var(--text);font-size:14px;font-family:inherit;outline:none;
+    }
+    input:focus,select:focus{border-color:var(--accent)}
+    button{cursor:pointer;background:var(--panel2);transition:filter .15s;font-weight:600}
+    button:hover{filter:brightness(1.15)}
+    button.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff}
+    .row{display:grid;grid-template-columns:1fr 1fr 90px 90px 1fr;gap:10px;margin-bottom:10px}
+    .row.dark{opacity:.55;font-size:.85em}
+    .card{
+      background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;
+      margin-bottom:10px;display:flex;align-items:center;gap:14px;
+    }
+    .card .info{flex:1;min-width:0}
+    .card h3{font-size:1em;margin-bottom:3px}
+    .card .meta{color:var(--muted);font-size:.85em}
+    .card .tag{background:var(--panel2);border:1px solid var(--line);padding:2px 8px;border-radius:999px;font-size:.75em}
+    .card button{margin-left:6px}
+    .empty{text-align:center;color:var(--muted);padding:40px;border:1px dashed var(--line);border-radius:12px}
+    .msg{color:var(--ok);font-size:.85em;min-height:1.2em;padding:8px 0}
+    .msg.err{color:#ff8b8b}
+    @media(max-width:680px){.row{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Кинотека <span class="badge" id="status">— API-панель</span></h1>
+    <a href="/swagger/index.html" style="color:#b7c0d0;font-size:.9em">Swagger</a>
+  </header>
+  <main>
+    <div class="toolbar">
+      <input id="fTitle" placeholder="Название" style="flex:1 1 180px">
+      <input id="fGenre" placeholder="Жанр" style="flex:1 1 120px">
+      <input id="fYear" type="number" placeholder="Год" style="width:90px">
+      <input id="fRating" type="number" step="0.1" placeholder="Рейтинг" style="width:110px">
+      <label style="display:flex;align-items:center;gap:6px;font-size:.9em">
+        <input type="checkbox" id="fCartoon"> Мультик
+      </label>
+      <button class="primary" id="btnAdd">Добавить</button>
+    </div>
+    <input id="fDesc" placeholder="Описание (необязательно)" style="width:100%;margin-bottom:8px">
+    <div class="toolbar">
+      <input id="sGenre" placeholder="Фильтр по жанру" style="flex:1">
+      <button id="btnFilter">Показать</button>
+      <button id="btnAll">Все</button>
+      <span style="color:var(--muted);font-size:.9em" id="count"></span>
+    </div>
+    <div class="msg" id="msg"></div>
+    <div id="list"></div>
+  </main>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const API = '/api/films';
+
+    async function api(method, url, body) {
+      const opt = { method, headers: {'Content-Type':'application/json'} };
+      if (body !== undefined) opt.body = JSON.stringify(body);
+      const r = await fetch(url, opt);
+      if (!r.ok) throw new Error((await r.json().catch(()=>({}))).error || ('HTTP '+r.status));
+      return r.status===204 ? null : r.json();
+    }
+    function msg(t, err){ const m=$('msg'); m.textContent=t; m.className='msg'+(err?' err':''); setTimeout(()=>{m.textContent=''},3000); }
+
+    function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+    async function load(filterGenre) {
+      let url = API;
+      if (filterGenre) url += '?genre=' + encodeURIComponent(filterGenre);
+      const films = await api('GET', url);
+      $('count').textContent = films.length + ' фильмов';
+      const list = $('list');
+      if (!films.length) { list.innerHTML = '<div class="empty">Каталог пуст — добавьте первый фильм.</div>'; return; }
+      list.innerHTML = films.map(f => `
+        <div class="card" data-id="${f.id}">
+          <div class="info">
+            <h3>${esc(f.title)} ${f.is_cartoon ? '<span class="tag">мульт</span>' : ''}</h3>
+            <div class="meta">${esc(f.genre||'—')} · ${f.year || '—'} · ★ ${f.rating != null ? f.rating : '—'}</div>
+            ${f.description ? `<div class="meta" style="color:#aeb7c6">${esc(f.description)}</div>` : ''}
+            <div class="meta" style="opacity:.6">id=${f.id}</div>
+          </div>
+          <button data-del="${f.id}">Удалить</button>
+        </div>`).join('');
+      list.querySelectorAll('[data-del]').forEach(b => b.onclick = () => del(Number(b.dataset.del)));
+    }
+    async function del(id){ try{ await api('DELETE', API+'/'+id); msg('Удалено'); load(currentGenre()); }catch(e){ msg('Ошибка: '+e.message,true); } }
+    function currentGenre(){ const g=$('sGenre').value.trim(); return g||null; }
+
+    $('btnAdd').onclick = async () => {
+      const title=$('fTitle').value.trim();
+      if(!title){ msg('Укажите название', true); return; }
+      const body = {
+        title,
+        genre: $('fGenre').value.trim(),
+        year: parseInt($('fYear').value,10)||0,
+        rating: parseFloat($('fRating').value)||0,
+        description: $('fDesc').value.trim(),
+        is_cartoon: $('fCartoon').checked
+      };
+      try { await api('POST', API, body); msg('Добавлено'); ['fTitle','fGenre','fYear','fRating','fDesc'].forEach(i=>$(i).value=''); $('fCartoon').checked=false; load(currentGenre()); }
+      catch(e){ msg('Ошибка: '+e.message, true); }
+    };
+    $('btnFilter').onclick = () => load(currentGenre());
+    $('btnAll').onclick = () => { $('sGenre').value=''; load(); };
+
+    // проверка связи с API
+    fetch('/health').then(r=>r.json()).then(d=>{ $('status').textContent='— статус: '+d.status; })
+      .catch(()=>{ $('status').textContent='— API недоступен'; });
+    load();
+  </script>
+</body>
+</html>

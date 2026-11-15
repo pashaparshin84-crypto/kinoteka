@@ -4,6 +4,8 @@
 package main
 
 import (
+	"embed"
+	"io/fs"
 	"log"
 	"net/http"
 
@@ -14,6 +16,9 @@ import (
 	"filmotheka/internal/db"
 	"filmotheka/internal/handlers"
 )
+
+//go:embed all:web
+var webFS embed.FS
 
 // @title Кинотека API
 // @version 1.0
@@ -40,6 +45,10 @@ func main() {
 	mux.Handle("/swagger/", httpSwagger.Handler(
 		httpSwagger.URL("/swagger/doc.json"),
 	))
+
+	// Веб-интерфейс панели управления каталогом
+	webContent, _ := fs.Sub(webFS, "web")
+	mux.Handle("/", http.FileServer(http.FS(webContent)))
 
 	// Маршруты
 	mux.HandleFunc("GET /health", h.Health)
