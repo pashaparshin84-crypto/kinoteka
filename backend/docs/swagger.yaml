@@ -1,0 +1,161 @@
+basePath: /
+definitions:
+  models.Film:
+    description: Фильм в каталоге Киноте ки
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      genre:
+        type: string
+      id:
+        type: integer
+      is_cartoon:
+        type: boolean
+      rating:
+        type: number
+      title:
+        type: string
+      video_url:
+        type: string
+      year:
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact:
+    name: Кинотека
+    url: http://localhost:8080
+  description: REST API каталога фильмов и мультиков на Go + PostgreSQL.
+  title: Кинотека API
+  version: "1.0"
+paths:
+  /api/films:
+    get:
+      description: Возвращает список фильмов каталога с опциональной фильтрацией по
+        жанру.
+      parameters:
+      - description: Фильтр по жанру
+        in: query
+        name: genre
+        type: string
+      - description: Ограничение количества (по умолчанию 100)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Film'
+            type: array
+      summary: Список фильмов
+      tags:
+      - films
+    post:
+      consumes:
+      - application/json
+      description: Создаёт новый фильм в каталоге и возвращает его с присвоенным id.
+      parameters:
+      - description: Данные нового фильма
+        in: body
+        name: film
+        required: true
+        schema:
+          $ref: '#/definitions/models.Film'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Film'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Добавить фильм
+      tags:
+      - films
+  /api/films/{id}:
+    delete:
+      description: Удаляет фильм из каталога по его id.
+      parameters:
+      - description: ID фильма
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Удалить фильм
+      tags:
+      - films
+    get:
+      description: Возвращает фильм по его идентификатору.
+      parameters:
+      - description: ID фильма
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Film'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить фильм
+      tags:
+      - films
+    put:
+      consumes:
+      - application/json
+      description: Обновляет данные фильма по его id.
+      parameters:
+      - description: ID фильма
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Новые данные
+        in: body
+        name: film
+        required: true
+        schema:
+          $ref: '#/definitions/models.Film'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Film'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Обновить фильм
+      tags:
+      - films
+swagger: "2.0"

@@ -1,0 +1,7 @@
+# Исключаем лишнее из контекста сборки Docker
+coverage
+*.log
+.env
+.git
+.gitignore
+README.md

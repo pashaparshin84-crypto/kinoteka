@@ -10,3 +10,10 @@ Thumbs.db
 *.jpg
 *.jpeg
 *.png
+
+# Go backend
+backend/.env
+backend/filmotheka
+backend/coverage/
+*.test
+*.exe
