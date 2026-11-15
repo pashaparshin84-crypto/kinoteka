@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Кинотека — смотрите фильмы и мультики онлайн</title>
+  <link rel="icon" href="data:,">
+  <style>
+    :root{
+      --bg:#0d0f14; --bg2:#14171f; --panel:#1a1e29; --panel2:#202634;
+      --line:#2a3140; --text:#eef1f6; --muted:#9aa4b5;
+      --accent:#ef4455; --accent2:#ff6b3d; --ok:#34c98f; --gold:#ffc65c;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body {
+      font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+      color:var(--text); line-height:1.6;
+      background:radial-gradient(1200px 600px at 80% -10%, #1d2333 0%, var(--bg) 55%);
+      min-height:100vh;
+    }
+    a { color:inherit; }
+
+    header {
+      background:rgba(13,15,20,.85); backdrop-filter:blur(12px);
+      color:#fff; padding:14px 5%;
+      display:flex; justify-content:space-between; align-items:center;
+      position:sticky; top:0; z-index:40; border-bottom:1px solid var(--line);
+    }
+    .logo { display:flex; align-items:center; gap:11px; font-weight:800; font-size:1.35em; }
+    .logo .badge{
+      width:34px;height:34px;border-radius:10px;display:grid;place-items:center;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      box-shadow:0 4px 12px rgba(239,68,85,.4);
+    }
+    .logo .badge svg{width:19px;height:19px}
+    nav a { color:#dfe5ef; text-decoration:none; margin-left:22px; font-size:.98em; transition:color .15s; }
+    nav a:hover { color:var(--gold); }
+
+    .hero {
+      text-align:center; padding:110px 5% 90px;
+      background:linear-gradient(135deg,#1a2336, #2c1a2e);
+      color:#fff; position:relative; overflow:hidden;
+      border-bottom:1px solid var(--line);
+    }
+    .hero::before{
+      content:""; position:absolute; inset:0; pointer-events:none;
+      background:
+        radial-gradient(700px 300px at 15% 10%, rgba(239,68,85,.25), transparent 60%),
+        radial-gradient(700px 300px at 85% 30%, rgba(101,84,192,.35), transparent 60%);
+    }
+    .hero > * { position:relative; z-index:1; }
+    .hero .eyebrow{
+      letter-spacing:.28em; text-transform:uppercase; font-size:.8em;
+      color:var(--gold); font-weight:700; opacity:.95;
+    }
+    .hero h1 { font-size:2.7em; margin:16px 0 14px; line-height:1.1; }
+    .hero p { max-width:640px; margin:0 auto; font-size:1.12em; color:#c6cddb; }
+    .hero .stats{ display:flex; gap:26px; justify-content:center; margin-top:34px; flex-wrap:wrap; }
+    .hero .stats b{ font-size:1.5em; display:block; color:#fff; }
+    .hero .stats span{ color:var(--muted); font-size:.85em; }
+
+    .btn {
+      display:inline-flex; align-items:center; gap:10px; margin-top:34px;
+      background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff;
+      padding:15px 36px; border-radius:999px; text-decoration:none; font-weight:800; font-size:1.05em;
+      box-shadow:0 10px 30px rgba(239,68,85,.4);
+      transition:transform .18s, box-shadow .18s, filter .18s;
+    }
+    .btn:hover { transform:translateY(-2px) scale(1.02); filter:brightness(1.07); box-shadow:0 14px 36px rgba(239,68,85,.5); }
+    .btn svg{ width:19px; height:19px; }
+
+    section { padding:70px 5%; }
+    section:nth-of-type(even){ background:#10131b; }
+    section h2 { text-align:center; margin-bottom:14px; color:#fff; font-size:1.9em; }
+    section .sub{ text-align:center; color:var(--muted); max-width:640px; margin:0 auto 36px; }
+
+    .cards { display:flex; gap:22px; flex-wrap:wrap; justify-content:center; }
+    .card {
+      background:var(--panel); border:1px solid var(--line); border-radius:16px;
+      padding:28px 24px; flex:1 1 250px; max-width:330px; transition:transform .18s, border-color .18s;
+    }
+    .card:hover { transform:translateY(-4px); border-color:#39445c; }
+    .card .ico{ width:28px; height:28px; margin-bottom:14px; }
+    .card h3{ color:#fff; margin-bottom:8px; font-size:1.15em; }
+    .card p{ color:var(--muted); font-size:.96em; }
+
+    form { max-width:480px; margin:0 auto; display:flex; flex-direction:column; gap:12px; }
+    input, textarea {
+      padding:13px 15px; border:1px solid var(--line); border-radius:10px; font-size:1em;
+      background:var(--panel); color:var(--text); outline:none; font-family:inherit; resize:vertical;
+    }
+    input:focus, textarea:focus { border-color:var(--accent); }
+    button {
+      padding:13px; border:none; border-radius:10px;
+      background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff;
+      font-size:1em; font-weight:700; cursor:pointer; transition:filter .15s;
+    }
+    button:hover { filter:brightness(1.08); }
+
+    footer { background:var(--bg2); color:var(--muted); text-align:center; padding:22px; font-size:.9em; border-top:1px solid var(--line); }
+
+    @media (max-width:640px){
+      header{ flex-direction:column; gap:10px; }
+      .hero h1{ font-size:2em; }
+      nav a{ margin-left:16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">
+      <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21"/></svg></span>
+      Кинотека
+    </div>
+    <nav>
+      <a href="#about">О нас</a>
+      <a href="#features">Возможности</a>
+      <a href="#contact">Контакты</a>
+    </nav>
+  </header>
+
+  <div class="hero">
+    <div class="eyebrow">Онлайн-кинотека</div>
+    <h1>1000 фильмов и мультиков под рукой</h1>
+    <p>Современный каталог с потоковой подкачкой: смотрите свободные ленты прямо на сайте, находите новинки по жанрам и добавляйте свою коллекцию.</p>
+    <a href="filmotheka.html" class="btn" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="#fff"><polygon points="6 3 20 12 6 21"/></svg>
+      Перейти в Кинотеку
+    </a>
+    <div class="stats">
+      <div><b>1000</b><span>карточек</span></div>
+      <div><b>10+</b><span>жанров</span></div>
+      <div><b>17</b><span>в свободном доступе</span></div>
+    </div>
+  </div>
+
+  <section id="about">
+    <h2>О нас</h2>
+    <p class="sub">Кинотека — это каталог, который помогает быстро находить фильмы и мультики. Свободные ленты (Creative Commons и общественное достояние) проигрываются прямо на сайте с потоковой подкачкой.</p>
+  </section>
+
+  <section id="features" style="background:#10131b;">
+    <h2>Возможности</h2>
+    <p class="sub">Всё, что нужно, чтобы смотреть и ориентироваться в коллекции.</p>
+    <div class="cards">
+      <div class="card"><h3>Потоковая подкачка</h3><p>Видео начинает играть по мере загрузки — не нужно скачивать весь файл целиком.</p></div>
+      <div class="card"><h3>Умный поиск</h3><p>Находите фильмы по названию, жанру и году за секунды.</p></div>
+      <div class="card"><h3>Своя коллекция</h3><p>Добавляйте карточки своих фильмов и сохраняйте их в каталог.</p></div>
+    </div>
+  </section>
+
+  <section id="contact">
+    <h2>Контакты</h2>
+    <p class="sub">Напишите нам — ответим на любой вопрос.</p>
+    <form id="contactForm">
+      <input type="text" id="name" placeholder="Ваше имя" required>
+      <input type="email" id="email" placeholder="Ваш email" required>
+      <textarea id="message" rows="4" placeholder="Сообщение" required></textarea>
+      <button type="submit">Отправить</button>
+    </form>
+    <p id="successMsg" style="text-align:center; color:var(--ok); display:none; margin-top:18px;">
+      Спасибо! Сообщение отправлено ✓
+    </p>
+  </section>
+
+  <footer>© 2026 Кинотека. Фильмы в свободном доступе воспроизводятся с подкачкой на сайте.</footer>
+
+  <script>
+    document.getElementById('contactForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      document.getElementById('successMsg').style.display = 'block';
+      this.reset();
+    });
+  </script>
+
+</body>
+</html>

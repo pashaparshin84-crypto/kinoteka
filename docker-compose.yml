@@ -1,0 +1,7 @@
+services:
+  kinoteka:
+    build: .
+    container_name: kinoteka
+    ports:
+      - "${PORT:-8080}:80"
+    restart: unless-stopped

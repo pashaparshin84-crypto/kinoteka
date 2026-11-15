@@ -1,0 +1,11 @@
+# Исключаем временные и лишние файлы из контекста сборки
+.git
+.gitignore
+*.jpg
+*.jpeg
+*.png
+*backup*
+Dockerfile
+nginx.conf
+docker-compose.yml
+.dockerignore
