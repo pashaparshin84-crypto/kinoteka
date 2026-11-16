@@ -1,0 +1,49 @@
+# Render Blueprint — автоматический деплой Кинотеки (Go API + PostgreSQL).
+#
+# Как использовать:
+#   1. На https://dashboard.render.com нажмите "New" → "Blueprint".
+#   2. Выберите этот репозиторий (pashaparshin84-crypto/kinoteka).
+#   3. Render сам создаст PostgreSQL и развернёт API согласно этому файлу.
+#   4. В разделе Blueprint покажут созданные ресурсы — нажмите "Apply".
+
+services:
+  # --- Веб-сервис API ---
+  - type: web
+    name: kinoteka-api
+    runtime: docker
+    repo: https://github.com/pashaparshin84-crypto/kinoteka
+    branch: main
+    dockerfilePath: /backend/Dockerfile
+    dockerContext: /backend
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: kinoteka-db
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: kinoteka-db
+          property: password
+      - key: POSTGRES_DB
+        fromDatabase:
+          name: kinoteka-db
+          property: database
+      - key: POSTGRES_PORT
+        fromDatabase:
+          name: kinoteka-db
+          property: port
+      - key: POSTGRES_HOST
+        fromDatabase:
+          name: kinoteka-db
+          property: host
+      - key: SERVER_PORT
+        value: 8080
+
+# --- База данных PostgreSQL ---
+databases:
+  - name: kinoteka-db
+    plan: free
+    databaseName: filmotheka_db
+    user: filmotheka_user
