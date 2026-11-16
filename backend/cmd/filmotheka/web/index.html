@@ -75,6 +75,26 @@
     <div id="list"></div>
   </main>
 
+  <!-- Модальное окно просмотра фильма -->
+  <div id="viewer" style="display:none;position:fixed;inset:0;background:rgba(5,6,9,.92);z-index:100;overflow:auto">
+    <div style="max-width:860px;margin:30px auto;padding:20px">
+      <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:16px">
+        <div style="flex:1">
+          <h2 id="vTitle" style="margin:0 0 6px"></h2>
+          <div id="vMeta" class="meta" style="color:var(--muted)"></div>
+        </div>
+        <button id="vClose" style="background:var(--panel2)">✕</button>
+      </div>
+      <div id="vPlayerWrap" style="border-radius:14px;overflow:hidden;background:#000;border:1px solid var(--line)">
+        <video id="vPlayer" controls preload="metadata" playsinline style="width:100%;display:block;aspect-ratio:16/9;background:#000"></video>
+      </div>
+      <div id="vNoVideo" style="text-align:center;color:var(--muted);padding:30px;border:1px dashed var(--line);border-radius:12px;display:none">
+        У этого фильма нет видео (video_url пуст).
+      </div>
+      <p id="vDesc" style="margin-top:16px;color:#c7cedb"></p>
+    </div>
+  </div>
+
   <script>
     const $ = id => document.getElementById(id);
     const API = '/api/films';
@@ -108,7 +128,38 @@
           <button data-del="${f.id}">Удалить</button>
         </div>`).join('');
       list.querySelectorAll('[data-del]').forEach(b => b.onclick = () => del(Number(b.dataset.del)));
+      // клик по информации фильма открывает просмотр
+      list.querySelectorAll('.card .info').forEach(el => el.onclick = () => openViewer(Number(el.closest('.card').dataset.id)));
     }
+    // --------- Просмотр фильма с видеоплеером ---------
+    let currentFilm = null;
+    function openViewer(id) {
+      api('GET', API + '/' + id).then(f => {
+        currentFilm = f;
+        $('vTitle').textContent = f.title;
+        $('vMeta').innerHTML = `${esc(f.genre||'—')} · ${f.year || '—'} · ★ ${f.rating != null ? f.rating : '—'} ${f.is_cartoon ? '· мультик' : ''}`;
+        $('vDesc').textContent = f.description || '';
+        const hasV = !!(f.video_url && f.video_url.trim());
+        $('vPlayerWrap').style.display = hasV ? 'block' : 'none';
+        $('vNoVideo').style.display = hasV ? 'none' : 'block';
+        const pl = $('vPlayer');
+        pl.pause();
+        pl.removeAttribute('src');
+        if (hasV) pl.src = f.video_url;
+        pl.load();
+        $('viewer').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+      }).catch(e => msg('Ошибка: '+e.message, true));
+    }
+    function closeViewer() {
+      currentFilm = null;
+      const pl = $('vPlayer');
+      pl.pause(); pl.removeAttribute('src'); pl.load();
+      $('viewer').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+    $('vClose').onclick = closeViewer;
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('viewer').style.display==='block') closeViewer(); });
     async function del(id){ try{ await api('DELETE', API+'/'+id); msg('Удалено'); load(currentGenre()); }catch(e){ msg('Ошибка: '+e.message,true); } }
     function currentGenre(){ const g=$('sGenre').value.trim(); return g||null; }
 
