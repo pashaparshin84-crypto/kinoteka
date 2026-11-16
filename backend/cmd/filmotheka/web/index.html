@@ -120,14 +120,11 @@
       list.innerHTML = films.map(f => `
         <div class="card" data-id="${f.id}">
           <div class="info">
-            <h3>${esc(f.title)} ${f.is_cartoon ? '<span class="tag">мульт</span>' : ''}</h3>
+            <h3>${esc(f.title)} ${f.is_cartoon ? '<span class="tag" style="background:var(--accent);color:#fff">аниме</span>' : '<span class="tag">фильм</span>'}</h3>
             <div class="meta">${esc(f.genre||'—')} · ${f.year || '—'} · ★ ${f.rating != null ? f.rating : '—'}</div>
             ${f.description ? `<div class="meta" style="color:#aeb7c6">${esc(f.description)}</div>` : ''}
-            <div class="meta" style="opacity:.6">id=${f.id}</div>
           </div>
-          <button data-del="${f.id}">Удалить</button>
         </div>`).join('');
-      list.querySelectorAll('[data-del]').forEach(b => b.onclick = () => del(Number(b.dataset.del)));
       // клик по информации фильма открывает просмотр
       list.querySelectorAll('.card .info').forEach(el => el.onclick = () => openViewer(Number(el.closest('.card').dataset.id)));
     }
@@ -160,7 +157,7 @@
     }
     $('vClose').onclick = closeViewer;
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('viewer').style.display==='block') closeViewer(); });
-    async function del(id){ try{ await api('DELETE', API+'/'+id); msg('Удалено'); load(currentGenre()); }catch(e){ msg('Ошибка: '+e.message,true); } }
+    
     function currentGenre(){ const g=$('sGenre').value.trim(); return g||null; }
 
     $('btnAdd').onclick = async () => {
