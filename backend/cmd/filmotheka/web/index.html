@@ -34,13 +34,20 @@
     .row{display:grid;grid-template-columns:1fr 1fr 90px 90px 1fr;gap:10px;margin-bottom:10px}
     .row.dark{opacity:.55;font-size:.85em}
     .card{
-      background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;
-      margin-bottom:10px;display:flex;align-items:center;gap:14px;
+      background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;
+      margin-bottom:10px;display:flex;align-items:stretch;gap:14px;cursor:pointer;
+      transition:border-color .15s,transform .15s,box-shadow .15s;
     }
-    .card .info{flex:1;min-width:0}
+    .card:hover{border-color:#39445c;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+    .card .thumb{width:86px;flex:0 0 auto;border-radius:8px;overflow:hidden;background:#11141b;
+      background-position:center;background-size:cover;position:relative;min-height:112px}
+    .card .thumb .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+      font-size:30px;font-weight:800;color:rgba(255,255,255,.85);background:linear-gradient(160deg,#2c7ade,#0d1a3a)}
+    .card .info{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
     .card h3{font-size:1em;margin-bottom:3px}
     .card .meta{color:var(--muted);font-size:.85em}
     .card .tag{background:var(--panel2);border:1px solid var(--line);padding:2px 8px;border-radius:999px;font-size:.75em}
+    .card .tag.cartoon{background:rgba(61,120,222,.25);border-color:rgba(61,120,222,.6);color:#9cc0ff}
     .card button{margin-left:6px}
     .empty{text-align:center;color:var(--muted);padding:40px;border:1px dashed var(--line);border-radius:12px}
     .msg{color:var(--ok);font-size:.85em;min-height:1.2em;padding:8px 0}
@@ -110,6 +117,18 @@
 
     function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+    // Кадр-миниатюра: у свободных лент video_url указывает на archive.org — берём обложку из архива.
+    function thumbFor(f) {
+      let imgsrc = '';
+      const v = f.video_url || '';
+      const m = v.match(/archive\.org\/download\/([^/]+)\//);
+      if (m) imgsrc = 'https://archive.org/services/img/' + encodeURIComponent(decodeURIComponent(m[1]));
+      const letter = esc(String(f.title||'?').trim().charAt(0).toUpperCase() || '?');
+      return imgsrc
+        ? `<div class="thumb" style="background-image:url('${esc(imgsrc)}')"></div>`
+        : `<div class="thumb"><span class="ph">${letter}</span></div>`;
+    }
+
     async function load(filterGenre) {
       let url = API;
       if (filterGenre) url += '?genre=' + encodeURIComponent(filterGenre);
@@ -119,14 +138,15 @@
       if (!films.length) { list.innerHTML = '<div class="empty">Каталог пуст — добавьте первый фильм.</div>'; return; }
       list.innerHTML = films.map(f => `
         <div class="card" data-id="${f.id}">
+          ${thumbFor(f)}
           <div class="info">
-            <h3>${esc(f.title)} ${f.is_cartoon ? '<span class="tag" style="background:var(--accent);color:#fff">аниме</span>' : '<span class="tag">фильм</span>'}</h3>
+            <h3>${esc(f.title)} ${f.is_cartoon ? '<span class="tag cartoon">аниме</span>' : '<span class="tag">фильм</span>'}</h3>
             <div class="meta">${esc(f.genre||'—')} · ${f.year || '—'} · ★ ${f.rating != null ? f.rating : '—'}</div>
             ${f.description ? `<div class="meta" style="color:#aeb7c6">${esc(f.description)}</div>` : ''}
           </div>
         </div>`).join('');
-      // клик по информации фильма открывает просмотр
-      list.querySelectorAll('.card .info').forEach(el => el.onclick = () => openViewer(Number(el.closest('.card').dataset.id)));
+      // клик по карточке открывает просмотр
+      list.querySelectorAll('.card').forEach(el => el.onclick = () => openViewer(Number(el.dataset.id)));
     }
     // --------- Просмотр фильма с видеоплеером ---------
     let currentFilm = null;
